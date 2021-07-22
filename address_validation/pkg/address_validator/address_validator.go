@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -30,28 +31,9 @@ type ValidatedAddress struct {
 }
 
 type AddressValidator interface {
-	validate(address UnvalidatedAddress) (ValidatedAddress, error)
-}
-
-type AddressFormatter interface {
-	format(address ValidatedAddress) string
-}
-
-type ValidatorInit struct {
-	AuthId    string
-	AuthToken string
-}
-
-func NewValidator(config ValidatorInit) AddressValidator {
-	smarty := smartyStreetsValidator{}
-	smarty.authId = config.AuthId
-	smarty.authToken = config.AuthToken
-
-	inMemory := addressValidatorInMemoryCache{}
-	inMemory.cache = make(map[string]ValidatedAddress)
-	inMemory.next = smarty
-
-	return inMemory
+	Validate(address UnvalidatedAddress) (ValidatedAddress, error)
+	setNext(validator AddressValidator)
+	hasNext() bool
 }
 
 // Address In-Memory Cache Layer
@@ -60,7 +42,7 @@ type addressValidatorInMemoryCache struct {
 	next AddressValidator
 }
 
-func (av addressValidatorInMemoryCache) validate(address UnvalidatedAddress) (ValidatedAddress, error) {
+func (av addressValidatorInMemoryCache) Validate(address UnvalidatedAddress) (ValidatedAddress, error) {
 	addressJson, err := json.Marshal(address)
 	var hashedAddress = ""
 	if err == nil {
@@ -72,12 +54,20 @@ func (av addressValidatorInMemoryCache) validate(address UnvalidatedAddress) (Va
 			return validatedAddress, nil
 		}
 	}
-	validated, err := av.next.validate(address)
+	validated, err := av.next.Validate(address)
 	if err == nil && hashedAddress != "" {
 		av.cache[hashedAddress] = validated
 		fmt.Println("Cached address in memory")
 	}
 	return validated, err
+}
+
+func (av addressValidatorInMemoryCache) setNext(validator AddressValidator) {
+	av.next = validator
+}
+
+func (av addressValidatorInMemoryCache) hasNext() bool {
+	return av.next != nil
 }
 
 // SmartStreets Validator
@@ -87,7 +77,7 @@ type smartyStreetsValidator struct {
 	next      AddressValidator
 }
 
-func (av smartyStreetsValidator) validate(address UnvalidatedAddress) (ValidatedAddress, error) {
+func (av smartyStreetsValidator) Validate(address UnvalidatedAddress) (ValidatedAddress, error) {
 	client := wireup.BuildUSStreetAPIClient(
 		wireup.SecretKeyCredential(av.authId, av.authToken),
 	)
@@ -106,18 +96,47 @@ func (av smartyStreetsValidator) validate(address UnvalidatedAddress) (Validated
 		if av.next == nil {
 			return ValidatedAddress{}, err
 		}
-		return av.next.validate(address)
-	}
-	for i, input := range batch.Records() {
-		fmt.Println("Smarty Results for input:", i)
-		fmt.Println()
-		for j, candidate := range input.Results {
-			fmt.Println("  Candidate:", j)
-			fmt.Println(" ", candidate.DeliveryLine1)
-			fmt.Println(" ", candidate.LastLine)
-			fmt.Println()
-		}
+		return av.next.Validate(address)
 	}
 	validated := ValidatedAddress{}
+	for _, input := range batch.Records() {
+		if len(input.Results) == 0 {
+			return validated, errors.New("unable to validate address")
+		}
+		for _, candidate := range input.Results {
+			validated.AddressLines = []string {
+				candidate.DeliveryLine1,
+				candidate.DeliveryLine2,
+			}
+			validated.PostalCode = candidate.Components.ZIPCode
+			validated.Locality = candidate.Components.CityName
+			validated.Region = candidate.Components.StateAbbreviation
+			validated.CountryId = "1"
+			validated.Meta = make(map[string]string)
+			validated.Meta["integration"] = "smarty"
+			validated.Meta["smarty_street_number"] = candidate.Components.PrimaryNumber
+			validated.Meta["smarty_street_pre_direction"] = candidate.Components.StreetPredirection
+			validated.Meta["smarty_street_name"] = candidate.Components.StreetName
+			validated.Meta["smarty_street_post_direction"] = candidate.Components.StreetPostdirection
+			validated.Meta["smarty_street_suffix"] = candidate.Components.StreetSuffix
+			validated.Meta["smarty_street_secondary_number"] = candidate.Components.SecondaryNumber
+			validated.Meta["smarty_street_secondary_designator"] = candidate.Components.SecondaryDesignator
+			validated.Meta["smarty_zip"] = candidate.Components.ZIPCode
+			validated.Meta["smarty_zip_plus_four"] = candidate.Components.Plus4Code
+			validated.Meta["smarty_delivery_point"] = candidate.Components.DeliveryPoint
+			validated.Meta["smarty_delivery_point_check_digit"] = candidate.Components.DeliveryPointCheckDigit
+			validated.Meta["smarty_county"] = candidate.Metadata.CountyName
+			validated.Meta["smarty_carrier_route"] = candidate.Metadata.CarrierRoute
+			validated.Meta["smarty_congressional_district"] = candidate.Metadata.CongressionalDistrict
+		}
+	}
 	return validated, nil
+}
+
+func (av smartyStreetsValidator) setNext(validator AddressValidator) {
+	av.next = validator
+}
+
+func (av smartyStreetsValidator) hasNext() bool {
+	return av.next != nil
 }
