@@ -32,14 +32,14 @@ type ValidatedAddress struct {
 
 type AddressValidator interface {
 	Validate(address UnvalidatedAddress) (ValidatedAddress, error)
-	setNext(validator AddressValidator)
+	setNext(validator *AddressValidator)
 	hasNext() bool
 }
 
 // Address In-Memory Cache Layer
 type addressValidatorInMemoryCache struct {
 	cache map[string]ValidatedAddress
-	next AddressValidator
+	next *AddressValidator
 }
 
 func (av addressValidatorInMemoryCache) Validate(address UnvalidatedAddress) (ValidatedAddress, error) {
@@ -54,7 +54,8 @@ func (av addressValidatorInMemoryCache) Validate(address UnvalidatedAddress) (Va
 			return validatedAddress, nil
 		}
 	}
-	validated, err := av.next.Validate(address)
+	next := *av.next
+	validated, err := next.Validate(address)
 	if err == nil && hashedAddress != "" {
 		av.cache[hashedAddress] = validated
 		fmt.Println("Cached address in memory")
@@ -62,11 +63,11 @@ func (av addressValidatorInMemoryCache) Validate(address UnvalidatedAddress) (Va
 	return validated, err
 }
 
-func (av addressValidatorInMemoryCache) setNext(validator AddressValidator) {
+func (av *addressValidatorInMemoryCache) setNext(validator *AddressValidator) {
 	av.next = validator
 }
 
-func (av addressValidatorInMemoryCache) hasNext() bool {
+func (av *addressValidatorInMemoryCache) hasNext() bool {
 	return av.next != nil
 }
 
@@ -74,7 +75,7 @@ func (av addressValidatorInMemoryCache) hasNext() bool {
 type smartyStreetsValidator struct {
 	authId    string
 	authToken string
-	next      AddressValidator
+	next      *AddressValidator
 }
 
 func (av smartyStreetsValidator) Validate(address UnvalidatedAddress) (ValidatedAddress, error) {
@@ -96,7 +97,8 @@ func (av smartyStreetsValidator) Validate(address UnvalidatedAddress) (Validated
 		if av.next == nil {
 			return ValidatedAddress{}, err
 		}
-		return av.next.Validate(address)
+		next := *av.next
+		return next.Validate(address)
 	}
 	validated := ValidatedAddress{}
 	for _, input := range batch.Records() {
@@ -133,10 +135,10 @@ func (av smartyStreetsValidator) Validate(address UnvalidatedAddress) (Validated
 	return validated, nil
 }
 
-func (av smartyStreetsValidator) setNext(validator AddressValidator) {
+func (av *smartyStreetsValidator) setNext(validator *AddressValidator) {
 	av.next = validator
 }
 
-func (av smartyStreetsValidator) hasNext() bool {
+func (av *smartyStreetsValidator) hasNext() bool {
 	return av.next != nil
 }
