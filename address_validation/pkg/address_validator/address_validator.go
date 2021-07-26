@@ -26,7 +26,7 @@ type ValidatedAddress struct {
 	Region       string            // State | Territory
 	Locality     string            // City
 	PostalCode   string            // PostalCode / ZipCode
-	CountryId    string            // Country ID
+	CountryCode    string          // Country Code
 	Meta         map[string]string // Integration & Source Information
 }
 
@@ -42,7 +42,7 @@ type addressValidatorInMemoryCache struct {
 	next *AddressValidator
 }
 
-func (av addressValidatorInMemoryCache) Validate(address UnvalidatedAddress) (ValidatedAddress, error) {
+func (av *addressValidatorInMemoryCache) Validate(address UnvalidatedAddress) (ValidatedAddress, error) {
 	addressJson, err := json.Marshal(address)
 	var hashedAddress = ""
 	if err == nil {
@@ -78,7 +78,7 @@ type smartyStreetsValidator struct {
 	next      *AddressValidator
 }
 
-func (av smartyStreetsValidator) Validate(address UnvalidatedAddress) (ValidatedAddress, error) {
+func (av *smartyStreetsValidator) Validate(address UnvalidatedAddress) (ValidatedAddress, error) {
 	client := wireup.BuildUSStreetAPIClient(
 		wireup.SecretKeyCredential(av.authId, av.authToken),
 	)
@@ -113,7 +113,7 @@ func (av smartyStreetsValidator) Validate(address UnvalidatedAddress) (Validated
 			validated.PostalCode = candidate.Components.ZIPCode
 			validated.Locality = candidate.Components.CityName
 			validated.Region = candidate.Components.StateAbbreviation
-			validated.CountryId = "1"
+			validated.CountryCode = "US"
 			validated.Meta = make(map[string]string)
 			validated.Meta["integration"] = "smarty"
 			validated.Meta["smarty_street_number"] = candidate.Components.PrimaryNumber

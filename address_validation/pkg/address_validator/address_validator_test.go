@@ -1,35 +1,39 @@
 package address_validator_test
 
 import (
-	"fmt"
+	"github.com/stretchr/testify/assert"
+	"io.parcely.address_validation/pkg/address_formater"
 	"io.parcely.address_validation/pkg/address_validator"
 
 	"os"
 	"testing"
 )
 
-func TestInMemoryAddressCache(t *testing.T) {
-	smartyCreds := address_validator.SmartyStreetsCredentials{}
-	smartyCreds.AuthId = os.Getenv("SMART_AUTH_ID")
-	smartyCreds.AuthToken = os.Getenv("SMART_AUTH_TOKEN")
+// TODO Write explicit builder and mock tests
+func TestAddressValidation(t *testing.T) {
+	smartyCredentials := address_validator.SmartyStreetsCredentials{}
+	smartyCredentials.AuthId = os.Getenv("SMART_AUTH_ID")
+	smartyCredentials.AuthToken = os.Getenv("SMART_AUTH_TOKEN")
 
 	builder := address_validator.CreateBuilder()
 	builder.WithInMemoryCache()
-	builder.WithSmartyValidator(smartyCreds)
+	builder.WithSmartyValidator(smartyCredentials)
+
+	formatter := address_formater.UsAddress{}
 	validator, _ := builder.Build()
 
-	uat := address_validator.UnvalidatedAddress{}
-	uat.AddressLines = []string {"110 N Marina Dr" }
-	uat.Locality = "Long Beach"
-	uat.Region = "california"
-	uat.PostalCode = "90803"
+	sut := address_validator.UnvalidatedAddress{}
+	sut.AddressLines = []string {"110N Marina Dr." }
+	sut.Locality = "Long Beach"
+	sut.Region = "california"
+	sut.PostalCode = "90803"
 
-	address, err := validator.Validate(uat)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(address)
-	address, err = validator.Validate(uat)
-	fmt.Println(address)
-	// TODO VALIDATE
+	address, err := validator.Validate(sut)
+	expected := "110N N Marina Dr , Long Beach, CA 90803"
+
+	assert.Equal(t, expected, formatter.Format(address))
+	assert.Nil(t, err)
+	address, err = validator.Validate(sut)
+	assert.Nil(t, err)
+	assert.Equal(t, expected, formatter.Format(address))
 }

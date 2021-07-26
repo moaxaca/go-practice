@@ -1,0 +1,367 @@
+{
+  "consumes": [
+    "application/json",
+    "application/xml"
+  ],
+  "produces": [
+    "application/json",
+    "application/xml"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "the purpose of this application is to provide an application\nthat is using plain go code to define an API\n\nThis should demonstrate all the possible comment annotations\nthat are available to turn go code into a fully compliant swagger 2.0 spec",
+    "title": "Petstore API.",
+    "termsOfService": "there are no TOS at this moment, use at your own risk we take no responsibility",
+    "contact": {
+      "name": "John Doe",
+      "url": "http://john.doe.com",
+      "email": "john.doe@example.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    },
+    "version": "0.0.1"
+  },
+  "host": "localhost",
+  "basePath": "/v2",
+  "paths": {
+    "/example": {
+      "get": {
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "description": "This is a working example of how to create an endpoint.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "Example"
+        ],
+        "summary": "Example Get Request",
+        "operationId": "exampleGet",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/example_response_success"
+          },
+          "401": {
+            "$ref": "#/responses/access_error"
+          },
+          "404": {
+            "$ref": "#/responses/miss_resource_error"
+          },
+          "422": {
+            "$ref": "#/responses/validation_error"
+          },
+          "default": {
+            "$ref": "#/responses/server_error"
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "description": "Health checks the application to ensure everything is setup and\nrunning correctly.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "Infrastructure"
+        ],
+        "summary": "HealthCheck",
+        "operationId": "healthz",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/health_check_response_success"
+          },
+          "401": {
+            "$ref": "#/responses/access_error"
+          },
+          "404": {
+            "$ref": "#/responses/miss_resource_error"
+          },
+          "422": {
+            "$ref": "#/responses/validation_error"
+          },
+          "default": {
+            "$ref": "#/responses/server_error"
+          }
+        }
+      }
+    },
+    "/validate": {
+      "get": {
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "description": "This will take a structured address and returns a\nstructured address which has been cross-validated\nagainst external systems.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "AddressManagement"
+        ],
+        "summary": "Validate Address",
+        "operationId": "validateAddress",
+        "parameters": [
+          {
+            "maxItems": 5,
+            "minItems": 1,
+            "uniqueItems": true,
+            "example": "[\"Address\"]",
+            "x-go-name": "AddressLines",
+            "description": "Address Lines",
+            "name": "addressLines",
+            "in": "body",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "string",
+            "x-go-name": "Region",
+            "name": "region",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Locality",
+            "name": "locality",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "PostalCode",
+            "name": "postalCode",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "CountryCode",
+            "name": "countryCode",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/address_validation_response_success"
+          },
+          "401": {
+            "$ref": "#/responses/access_error"
+          },
+          "404": {
+            "$ref": "#/responses/miss_resource_error"
+          },
+          "422": {
+            "$ref": "#/responses/validation_error"
+          },
+          "default": {
+            "$ref": "#/responses/server_error"
+          }
+        }
+      }
+    }
+  },
+  "responses": {
+    "access_error": {
+      "description": "A AccessError is an error that is used when the required input fails access validation.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "Message"
+        ],
+        "properties": {
+          "FieldName": {
+            "description": "An optional field name to which this validation applies",
+            "type": "string"
+          },
+          "Message": {
+            "description": "The validation message",
+            "type": "string",
+            "example": "Expected type int"
+          }
+        }
+      }
+    },
+    "address_validation_response_success": {
+      "description": "AddressValidationResponseSuccess represents the user for this application\n\nA user is the security principal for this application.\nIt's also used as one of main axes for reporting.\n\nA user can have friends with whom they can share what they like.",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "headers": {
+        "addressLines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "locality": {
+          "type": "string"
+        },
+        "meta": {},
+        "postalCode": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        }
+      }
+    },
+    "example_response_success": {
+      "description": "ExampleResponseSuccess represents the user for this application\n\nA user is the security principal for this application.\nIt's also used as one of main axes for reporting.\n\nA user can have friends with whom they can share what they like.",
+      "headers": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "health_check_response_success": {
+      "description": "HealthCheckResponseSuccess represents the user for this application\n\nA user is the security principal for this application.\nIt's also used as one of main axes for reporting.\n\nA user can have friends with whom they can share what they like.",
+      "headers": {
+        "message": {
+          "type": "string"
+        },
+        "sha": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "miss_resource_error": {
+      "description": "A MissingResourceError is an error that is used when the target resource isn't found.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "Message"
+        ],
+        "properties": {
+          "FieldName": {
+            "description": "An optional field name to which this validation applies",
+            "type": "string"
+          },
+          "Message": {
+            "description": "The validation message",
+            "type": "string",
+            "example": "Expected type int"
+          }
+        }
+      }
+    },
+    "server_error": {
+      "description": "A ServerError is an error that is used when the target resource isn't found.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "Message"
+        ],
+        "properties": {
+          "FieldName": {
+            "description": "An optional field name to which this validation applies",
+            "type": "string"
+          },
+          "Message": {
+            "description": "The validation message",
+            "type": "string",
+            "example": "Expected type int"
+          }
+        }
+      }
+    },
+    "validation_error": {
+      "description": "A ValidationError is an error that is used when the required input fails validation.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "Message"
+        ],
+        "properties": {
+          "FieldName": {
+            "description": "An optional field name to which this validation applies",
+            "type": "string"
+          },
+          "Message": {
+            "description": "The validation message",
+            "type": "string",
+            "example": "Expected type int"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "api_key": {
+      "type": "apiKey",
+      "name": "KEY",
+      "in": "header"
+    },
+    "oauth2": {
+      "type": "oauth2",
+      "in": "header",
+      "flow": "accessCode",
+      "authorizationUrl": "/oauth2/auth",
+      "tokenUrl": "/oauth2/token",
+      "scopes": {
+        "bar": "foo"
+      }
+    }
+  },
+  "security": [
+    {
+      "api_key": []
+    }
+  ],
+  "x-meta-array": [
+    "value1",
+    "value2"
+  ],
+  "x-meta-array-obj": [
+    {
+      "name": "obj",
+      "value": "field"
+    }
+  ],
+  "x-meta-value": "value"
+}
