@@ -32,6 +32,13 @@ func (b *AddressValidatorBuilder) WithSmartyValidator(creds SmartyStreetsCredent
 	b.validators = append(b.validators, &casted)
 }
 
+func (b *AddressValidatorBuilder) WithStub(fixture ValidatedAddress) {
+	validator := &stubValidator{}
+	validator.fixture = fixture
+	casted := AddressValidator(validator)
+	b.validators = append(b.validators, &casted)
+}
+
 func (b *AddressValidatorBuilder) Build() (AddressValidator, error) {
 	if len(b.validators) == 0 {
 		return nil, errors.New("missing address validators")

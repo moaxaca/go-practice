@@ -4,20 +4,19 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io.parcely.address_validation/pkg/address_formater"
 	"io.parcely.address_validation/pkg/address_validator"
-
-	"os"
 	"testing"
 )
 
-// TODO Write explicit builder and mock tests
 func TestAddressValidation(t *testing.T) {
-	smartyCredentials := address_validator.SmartyStreetsCredentials{}
-	smartyCredentials.AuthId = os.Getenv("SMART_AUTH_ID")
-	smartyCredentials.AuthToken = os.Getenv("SMART_AUTH_TOKEN")
+	fixture := address_validator.ValidatedAddress{}
+	fixture.AddressLines = []string {"110N Marina Dr." }
+	fixture.Locality = "Long Beach"
+	fixture.Region = "california"
+	fixture.PostalCode = "90803"
 
 	builder := address_validator.CreateBuilder()
 	builder.WithInMemoryCache()
-	builder.WithSmartyValidator(smartyCredentials)
+	builder.WithStub(fixture)
 
 	formatter := address_formater.UsAddress{}
 	validator, _ := builder.Build()
@@ -29,11 +28,24 @@ func TestAddressValidation(t *testing.T) {
 	sut.PostalCode = "90803"
 
 	address, err := validator.Validate(sut)
-	expected := "110N N Marina Dr , Long Beach, CA 90803"
+	assert.Equal(t, formatter.Format(fixture), formatter.Format(address))
+	assert.Nil(t, err)
+}
 
-	assert.Equal(t, expected, formatter.Format(address))
-	assert.Nil(t, err)
-	address, err = validator.Validate(sut)
-	assert.Nil(t, err)
-	assert.Equal(t, expected, formatter.Format(address))
+func TestAddressValidatorBuilder(t *testing.T) {
+	builder := address_validator.CreateBuilder()
+	builder.WithInMemoryCache()
+	_, stubErr := builder.Build()
+	assert.Nil(t, stubErr)
+
+	builder.WithInMemoryCache()
+	_, inMemoryErr := builder.Build()
+	assert.Nil(t, inMemoryErr)
+
+	smartyCredentials := address_validator.SmartyStreetsCredentials{}
+	smartyCredentials.AuthId = "FAKE_SMART_AUTH_ID"
+	smartyCredentials.AuthToken = "FAKE_SMART_AUTH_TOKEN"
+	builder.WithSmartyValidator(smartyCredentials)
+	_, smartyErr := builder.Build()
+	assert.Nil(t, smartyErr)
 }

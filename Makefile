@@ -1,7 +1,9 @@
 # Variables
-IMAGE=go_example
+APPLICATION=address_validation
+CURRENT_DIR = $(shell pwd)
+IMAGE=go-$(APPLICATION)
 TARGET=production
-PLATFORM=linux/amd64 # Docker
+PLATFORM=linux/amd64
 
 ARCH=$(shell go env GOOS)-$(shell go env GOARCH)
 platform_temp=$(subst -, ,$(ARCH))
@@ -10,22 +12,25 @@ PKG := github.com/moaxaca/paracly_api
 GOOS = $(word 1, $(platform_temp))
 GOARCH = $(word 2, $(platform_temp))
 
-APP=address_validation
+# Versioning Information
+HASH := $(shell git rev-parse HEAD)
 
 # Local
 install:
-	cd $(APP) && go mod download && go mod vendor;
+	cd $(APPLICATION) && go mod download && go mod vendor;
+
 # Docker
-all: cleanup build run
+all: install cleanup build run
 
 cleanup:
 	docker rm $(IMAGE) || true;
 
 build:
 	docker buildx build . \
-	--tag $(IMAGE) \
-	--target $(TARGET) \
-   	--platform $(PLATFORM);
+		--build-arg APPLICATION=$(APPLICATION) \
+		--tag $(IMAGE) \
+		--target $(TARGET) \
+   		--platform $(PLATFORM);
 
 lint:
 	docker rm $(IMAGE)-lint || true;
@@ -33,18 +38,40 @@ lint:
 		--tag $(IMAGE)-lint \
 		--target lint \
    		--platform $(PLATFORM);
-	docker run $(IMAGE)-lint;
+	make run IMAGE=$(IMAGE)-lint;
 
 unit:
 	docker rm $(IMAGE)-unit || true;
 	docker buildx build . \
-		--tag $(IMAGE)-unit \
 		--target unit \
+		--tag $(IMAGE)-unit \
    		--platform $(PLATFORM);
-	docker run $(IMAGE)-unit;
+	make run IMAGE=$(IMAGE)-unit;
 
-run: cleanup build
-	docker run \
-	-it \
-	-p 8080:8080 \
-	$(IMAGE);
+e2e:
+	docker rm $(IMAGE)-unit || true;
+	docker buildx build . \
+		--target e2e \
+		--tag $(IMAGE)-e2e \
+   		--platform $(PLATFORM);
+	make run IMAGE=$(IMAGE)-e2e;
+
+run:
+	docker run --env-file .env -v $(CURRENT_DIR)/.output:/app/.output -it $(IMAGE);
+
+serve: build
+	make cleanup;
+	make build TARGET=production;
+	docker run -it --env-file .env -p 8080:8080 $(IMAGE);
+
+# Swagger
+generate_swagger:
+	cd $(APPLICATION) && swagger generate spec -o ./api/rest/swagger.json
+
+swagger:
+	docker rm $(IMAGE)-swagger || true;
+	docker buildx build . \
+		--target swagger \
+		--tag $(IMAGE)-swagger \
+   		--platform $(PLATFORM);
+	docker run -p 8081:8081 $(IMAGE)-swagger;

@@ -4,6 +4,7 @@ import (
 	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/registry"
 	"io.parcely.address_validation/internal"
+	"os"
 )
 
 // @title Swagger Example API
@@ -55,7 +56,7 @@ func main() {
 	// Rest Server Construction
 	serverConfig := internal.RestServerConfiguration{}
 	serverConfig.Name = "Address Validation Service"
-	serverConfig.Address = ":8080"
+	serverConfig.Address = ":"+os.Getenv("APP_PORT")
 	server := internal.CreateRestServer(serverConfig)
 
 	// GRPC Construction

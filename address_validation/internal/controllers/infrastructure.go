@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"os"
 )
 
 // HealthCheckResponseSuccess represents the user for this application
@@ -13,7 +14,7 @@ import (
 //
 // swagger:response health_check_response_success
 type HealthCheckResponseSuccess struct {
-	Message string `json:"message,omitempty"`
+	Name string `json:"name,omitempty"`
 	Version string `json:"version,omitempty"`
 	BuildSha string `json:"sha,omitempty"`
 }
@@ -38,14 +39,11 @@ type infrastructureHandlers struct{}
 //     Responses:
 //       default: server_error
 //       200: health_check_response_success
-//       401: access_error
-//       404: miss_resource_error
-//       422: validation_error
 func (a *infrastructureHandlers) healthCheck(c *gin.Context) {
 	response := HealthCheckResponseSuccess{}
-	response.BuildSha = "na"
-	response.Message = "App is healthy"
-	response.Version = "0.0.0"
+	response.BuildSha = os.Getenv("APP_BUILD_HASH")
+	response.Name = os.Getenv("APP_NAME")
+	response.Version = os.Getenv("APP_VERSION")
 	c.JSON(200, response)
 }
 

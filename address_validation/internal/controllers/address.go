@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"io.parcely.address_validation/internal/helpers"
 	"io.parcely.address_validation/pkg/address_validator"
 )
 
@@ -22,9 +23,9 @@ type AddressValidationRequest struct {
 	// in: body
 	// example: ["Address"]
 	AddressLines []string `json:"addressLines,omitempty"`
-	Region       string            `json:"region,omitempty"`
 	Locality     string            `json:"locality,omitempty"`
 	PostalCode   string            `json:"postalCode,omitempty"`
+	Region       string            `json:"region,omitempty"`
 	CountryCode    string          `json:"countryCode,omitempty"`
 }
 
@@ -43,6 +44,7 @@ type AddressValidationResponseSuccess struct {
 	Locality     string            `json:"locality,omitempty"`
 	PostalCode   string            `json:"postalCode,omitempty"`
 	CountryCode    string          `json:"countryCode,omitempty"`
+	Coordinates    address_validator.Coordinate          `json:"coordinates"`
 	Meta         map[string]string `json:"meta,omitempty"`
 }
 
@@ -72,6 +74,7 @@ type addressHandlers struct {
 //     Responses:
 //       default: server_error
 //       200: address_validation_response_success
+//       400: access_error
 //       401: access_error
 //       404: miss_resource_error
 //       422: validation_error
@@ -79,7 +82,12 @@ func (a *addressHandlers) index(c *gin.Context) {
 	request := new(AddressValidationRequest)
 	err := c.Bind(request)
 	if err != nil {
-		// TODO
+		c.JSON(400, helpers.ValidationError{
+			Body: struct {
+				Message   string
+				FieldName string
+			}{Message: "Bad Value"},
+		})
 		return
 	}
 	unvalidated := address_validator.UnvalidatedAddress{}
@@ -90,7 +98,11 @@ func (a *addressHandlers) index(c *gin.Context) {
 	unvalidated.Country = request.CountryCode
 	validate, err := a.addressValidator.Validate(unvalidated)
 	if err != nil {
-		// TODO
+		c.JSON(404, helpers.MissingResourceError{
+			Body: struct {
+				Message   string
+			}{Message: "Unable to validate address"},
+		})
 		return
 	}
 	response := AddressValidationResponseSuccess{}
@@ -99,6 +111,8 @@ func (a *addressHandlers) index(c *gin.Context) {
 	response.Region = validate.Region
 	response.PostalCode = validate.PostalCode
 	response.CountryCode = validate.CountryCode
+	response.Coordinates = validate.Coordinate
+	response.Meta = validate.Meta
 	c.JSON(200, response)
 }
 

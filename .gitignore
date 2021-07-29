@@ -1,1 +1,7 @@
+.idea/*
+.output/*
+!.output/.keep
 **/vendor/**/*
+
+.env*
+!.env.example

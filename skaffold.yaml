@@ -1,0 +1,30 @@
+apiVersion: skaffold/v2beta19
+kind: Config
+metadata:
+  name: go-practice
+build:
+  local:
+    useBuildkit: true
+  artifacts:
+    - image: moaxaca.com/address_validation
+      docker:
+        dockerfile: Dockerfile
+        target: production
+        buildArgs:
+          APPLICATION: address_validation
+          BUILD_HASH: local
+deploy:
+  helm:
+    releases:
+      - name: address-validation
+        chartPath: ./infrastructure/go-base-chart
+        valuesFiles:
+          - ./infrastructure/go-base-chart/values.yaml
+          - ./infrastructure/go-base-chart/values.local.yaml
+        artifactOverrides:
+          image: moaxaca.com/address_validation
+        namespace: default
+        createNamespace: true
+    flags:
+      upgrade:
+        - --install

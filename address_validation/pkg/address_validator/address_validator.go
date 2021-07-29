@@ -20,13 +20,19 @@ type UnvalidatedAddress struct {
 	Country      string
 }
 
+type Coordinate struct {
+	latitude float64
+	longitude float64
+}
+
 type ValidatedAddress struct {
 	Uuid         string
 	AddressLines []string
 	Region       string            // State | Territory
 	Locality     string            // City
 	PostalCode   string            // PostalCode / ZipCode
-	CountryCode    string          // Country Code
+	CountryCode  string            // Country Code
+	Coordinate   Coordinate
 	Meta         map[string]string // Integration & Source Information
 }
 
@@ -34,6 +40,23 @@ type AddressValidator interface {
 	Validate(address UnvalidatedAddress) (ValidatedAddress, error)
 	setNext(validator *AddressValidator)
 	hasNext() bool
+}
+
+// Stub Validator
+type stubValidator struct {
+	fixture ValidatedAddress
+}
+
+func (av *stubValidator) Validate(_ UnvalidatedAddress) (ValidatedAddress, error) {
+	return av.fixture, nil
+}
+
+func (av *stubValidator) setNext(_ *AddressValidator) {
+	return
+}
+
+func (av *stubValidator) hasNext() bool {
+	return true
 }
 
 // Address In-Memory Cache Layer
@@ -114,6 +137,10 @@ func (av *smartyStreetsValidator) Validate(address UnvalidatedAddress) (Validate
 			validated.Locality = candidate.Components.CityName
 			validated.Region = candidate.Components.StateAbbreviation
 			validated.CountryCode = "US"
+			validated.Coordinate = Coordinate{
+				latitude: candidate.Metadata.Latitude,
+				longitude:  candidate.Metadata.Longitude,
+			}
 			validated.Meta = make(map[string]string)
 			validated.Meta["integration"] = "smarty"
 			validated.Meta["smarty_street_number"] = candidate.Components.PrimaryNumber

@@ -43,8 +43,6 @@ type MissingResourceError struct {
 		// Required: true
 		// Example: Expected type int
 		Message string
-		// An optional field name to which this validation applies
-		FieldName string
 	}
 }
 

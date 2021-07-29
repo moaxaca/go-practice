@@ -60,12 +60,6 @@
           "401": {
             "$ref": "#/responses/access_error"
           },
-          "404": {
-            "$ref": "#/responses/miss_resource_error"
-          },
-          "422": {
-            "$ref": "#/responses/validation_error"
-          },
           "default": {
             "$ref": "#/responses/server_error"
           }
@@ -93,15 +87,6 @@
         "responses": {
           "200": {
             "$ref": "#/responses/health_check_response_success"
-          },
-          "401": {
-            "$ref": "#/responses/access_error"
-          },
-          "404": {
-            "$ref": "#/responses/miss_resource_error"
-          },
-          "422": {
-            "$ref": "#/responses/validation_error"
           },
           "default": {
             "$ref": "#/responses/server_error"
@@ -151,12 +136,6 @@
           },
           {
             "type": "string",
-            "x-go-name": "Region",
-            "name": "region",
-            "in": "query"
-          },
-          {
-            "type": "string",
             "x-go-name": "Locality",
             "name": "locality",
             "in": "query"
@@ -169,6 +148,12 @@
           },
           {
             "type": "string",
+            "x-go-name": "Region",
+            "name": "region",
+            "in": "query"
+          },
+          {
+            "type": "string",
             "x-go-name": "CountryCode",
             "name": "countryCode",
             "in": "query"
@@ -177,6 +162,9 @@
         "responses": {
           "200": {
             "$ref": "#/responses/address_validation_response_success"
+          },
+          "400": {
+            "$ref": "#/responses/access_error"
           },
           "401": {
             "$ref": "#/responses/access_error"
@@ -192,6 +180,12 @@
           }
         }
       }
+    }
+  },
+  "definitions": {
+    "Coordinate": {
+      "type": "object",
+      "x-go-package": "io.parcely.address_validation/pkg/address_validator"
     }
   },
   "responses": {
@@ -221,7 +215,8 @@
         "type": "object",
         "additionalProperties": {
           "type": "string"
-        }
+        },
+        "$ref": "#/definitions/Coordinate"
       },
       "headers": {
         "addressLines": {
@@ -230,6 +225,7 @@
             "type": "string"
           }
         },
+        "coordinates": {},
         "countryCode": {
           "type": "string"
         },
@@ -259,7 +255,7 @@
     "health_check_response_success": {
       "description": "HealthCheckResponseSuccess represents the user for this application\n\nA user is the security principal for this application.\nIt's also used as one of main axes for reporting.\n\nA user can have friends with whom they can share what they like.",
       "headers": {
-        "message": {
+        "name": {
           "type": "string"
         },
         "sha": {
@@ -278,10 +274,6 @@
           "Message"
         ],
         "properties": {
-          "FieldName": {
-            "description": "An optional field name to which this validation applies",
-            "type": "string"
-          },
           "Message": {
             "description": "The validation message",
             "type": "string",

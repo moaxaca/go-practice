@@ -39,8 +39,6 @@ type exampleHandlers struct{}
 //       default: server_error
 //       200: example_response_success
 //       401: access_error
-//       404: miss_resource_error
-//       422: validation_error
 func (a *exampleHandlers) index(c *gin.Context) {
 	response := ExampleResponseSuccess{Message: "Example Endpoint"}
 	c.JSON(200, response)

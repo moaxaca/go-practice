@@ -92,9 +92,7 @@ func CreateRestServer(config RestServerConfiguration) server.Server {
 	addressValidatorBuilder.WithSmartyValidator(smartyCredentials)
 	addressValidator, _ := addressValidatorBuilder.Build()
 	controllers.RegisterAddressRoutes(router.Group("/validate"), addressValidator)
-
 	controllers.RegisterExampleRoutes(router.Group("/example"))
-
 	controllers.RegisterInfrastructureRoutes(router.Group("/"))
 
 	// Register Router Handler
