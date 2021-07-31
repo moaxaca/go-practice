@@ -1,6 +1,11 @@
 .idea/*
+
+.local/*
+!.local/.keep
+
 .output/*
 !.output/.keep
+
 **/vendor/**/*
 
 .env*

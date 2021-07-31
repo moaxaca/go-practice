@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  av:
+    container_name: go-address_validation
+    build:
+      context: .
+      args: {}
+      dockerfile: Dockerfile
+      target: production
+    depends_on: []
+    env_file: .env
+    environment:
+      APP_PORT: 8080
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./address_validation:/usr/src/app
+  av-swagger:
+    container_name: go-address_validation-swagger
+    build:
+      context: .
+      args: {}
+      dockerfile: Dockerfile
+      target: swagger
+    depends_on: []
+    env_file: .env
+    environment: {}
+    ports:
+      - '8081:8081'
+    volumes:
+      - ./address_validation:/usr/src/app

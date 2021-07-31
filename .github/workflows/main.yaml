@@ -1,0 +1,95 @@
+name: Main Workflow
+on:
+  push:
+    branches:
+      - main
+env:
+  # Holistic
+  API_HOSTNAME: ${{ secrets.API_HOSTNAME }}
+  API_CERT_SECRET: api-cert
+  # Address Validation
+  AV_DOCKER_TAG: gcr.io/${{ secrets.GCP_PROJECT_ID }}/address_validation:${{ github.sha }}
+  AV_RELEASE_NAME: address-validation
+  AV_NAMESPACE: production
+jobs:
+  prebuild:
+    name: Prebuild
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+      - name: Codespell
+        uses: codespell-project/actions-codespell@master
+        with:
+          skip: .git
+          ignore_words_list: iam,aks
+          check_filenames: true
+          check_hidden: true
+  av-build:
+    name: AV - Build
+    runs-on: ubuntu-latest
+    needs:
+      - prebuild
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+      - name: Authorize Docker push
+        run: gcloud auth configure-docker
+      - name: Lint Code
+        run: make lint RUN_FLAGS=""
+      - name: Unit Test
+        run: make unit RUN_FLAGS=""
+      - name: Build Image - Application
+        run: make build \
+          APPLICATION=address_validation \
+          TAG=${{ env.AV_DOCKER_TAG }} \
+          PLATFORM=linux/amd64 \
+          TARGET=production;
+      - name: Build Image - Swagger
+        run: make build \
+          APPLICATION=address_validation \
+          TAG=${{ env.AV_DOCKER_TAG }}-swagger \
+          PLATFORM=linux/amd64 \
+          TARGET=swagger;
+      - name: Push Builds
+        run: |
+          docker push ${{ env.AV_DOCKER_TAG }};
+          docker push ${{ env.AV_DOCKER_TAG }}-swagger;
+  av-deploy:
+    name: AV - Deploy
+    runs-on: ubuntu-latest
+    needs:
+      - av-build
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v2
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+      - uses: google-github-actions/get-gke-credentials@v0.2.1
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
+          location: ${{ secrets.GKE_LOCATION }}
+          credentials: ${{ secrets.GCP_SA_KEY }}
+      - name: "Deploy Helm Chart"
+        run: |
+          cd ./infrastructure/go-base-chart;
+          helm dependency update . ;
+          helm upgrade ${{ env.AV_RELEASE_NAME }} . \
+            --install \
+            --set image=${{ env.AV_DOCKER_TAG }} \
+            --set ingress.enabled=true
+            --set ingress.tls[0].hosts[0]=${{ env.API_HOSTNAME }} \
+            --set ingress.tls[0].secretName=${{ env.API_CERT_SECRET }} \
+            --set ingress.hosts[0].host=${{ env.API_HOSTNAME }} \
+            --set ingress.hosts[0].paths[0].path=\/address-validation \
+            --create-namespace \
+            --namespace ${{ env.AV_NAMESPACE }};

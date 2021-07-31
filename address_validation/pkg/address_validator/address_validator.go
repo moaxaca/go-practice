@@ -51,9 +51,7 @@ func (av *stubValidator) Validate(_ UnvalidatedAddress) (ValidatedAddress, error
 	return av.fixture, nil
 }
 
-func (av *stubValidator) setNext(_ *AddressValidator) {
-	return
-}
+func (av *stubValidator) setNext(_ *AddressValidator) {}
 
 func (av *stubValidator) hasNext() bool {
 	return true

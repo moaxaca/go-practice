@@ -1,9 +1,15 @@
 # Variables
 APPLICATION=address_validation
 CURRENT_DIR = $(shell pwd)
-IMAGE=go-$(APPLICATION)
+TAG=go-$(APPLICATION)
 TARGET=production
 PLATFORM=linux/amd64
+
+RUN_BUILD=echo "build skip";
+ifeq ($(BUILD_TOO),true)
+	RUN_BUILD=make build;
+endif
+RUN_FLAGS=-i
 
 ARCH=$(shell go env GOOS)-$(shell go env GOARCH)
 platform_temp=$(subst -, ,$(ARCH))
@@ -23,55 +29,56 @@ install:
 all: install cleanup build run
 
 cleanup:
-	docker rm $(IMAGE) || true;
+	docker rm $(TAG) || true;
 
 build:
 	docker buildx build . \
 		--build-arg APPLICATION=$(APPLICATION) \
-		--tag $(IMAGE) \
+		--tag $(TAG) \
 		--target $(TARGET) \
    		--platform $(PLATFORM);
 
 lint:
-	docker rm $(IMAGE)-lint || true;
+	docker rm $(TAG)-lint || true;
 	docker buildx build . \
-		--tag $(IMAGE)-lint \
+		--tag $(TAG)-lint \
 		--target lint \
    		--platform $(PLATFORM);
-	make run IMAGE=$(IMAGE)-lint;
+	make run TAG=$(TAG)-lint;
 
 unit:
-	docker rm $(IMAGE)-unit || true;
+	docker rm $(TAG)-unit || true;
 	docker buildx build . \
 		--target unit \
-		--tag $(IMAGE)-unit \
+		--tag $(TAG)-unit \
    		--platform $(PLATFORM);
-	make run IMAGE=$(IMAGE)-unit;
+	make run TAG=$(TAG)-unit;
 
 e2e:
-	docker rm $(IMAGE)-unit || true;
+	docker rm $(TAG)-unit || true;
 	docker buildx build . \
 		--target e2e \
-		--tag $(IMAGE)-e2e \
+		--tag $(TAG)-e2e \
    		--platform $(PLATFORM);
-	make run IMAGE=$(IMAGE)-e2e;
+	make run TAG=$(TAG)-e2e;
 
 run:
-	docker run --env-file .env -v $(CURRENT_DIR)/.output:/app/.output -it $(IMAGE);
+	$(RUN_BUILD)
+	docker run -v $(CURRENT_DIR)/.output:/app/.output $(RUN_FLAGS) -t $(TAG);
 
 serve: build
 	make cleanup;
 	make build TARGET=production;
-	docker run -it --env-file .env -p 8080:8080 $(IMAGE);
+	docker run -it --env-file .env -p 8080:8080 $(TAG);
 
 # Swagger
 generate_swagger:
 	cd $(APPLICATION) && swagger generate spec -o ./api/rest/swagger.json
 
 swagger:
-	docker rm $(IMAGE)-swagger || true;
+	docker rm $(TAG)-swagger || true;
 	docker buildx build . \
 		--target swagger \
-		--tag $(IMAGE)-swagger \
+		--tag $(TAG)-swagger \
    		--platform $(PLATFORM);
-	docker run -p 8081:8081 $(IMAGE)-swagger;
+	docker run -p 8081:8081 $(TAG)-swagger;

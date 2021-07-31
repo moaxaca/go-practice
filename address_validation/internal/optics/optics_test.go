@@ -1,6 +1,5 @@
 package optics
 
-
-func testRecordMetrics() {
-	//recordContext()
-}
+//func testRecordMetrics() {
+//	recordContext()
+//}
