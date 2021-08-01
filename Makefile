@@ -82,3 +82,7 @@ swagger:
 		--tag $(TAG)-swagger \
    		--platform $(PLATFORM);
 	docker run -p 8081:8081 $(TAG)-swagger;
+
+NS=production
+ksn:
+	kubectl config set-context --current --namespace=$(NS);
