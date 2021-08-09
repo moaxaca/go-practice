@@ -1,0 +1,41 @@
+syntax = "proto3";
+option go_package = "api/grpc/protos";
+
+message AddressValidationRequest {
+  repeated string AddressLines = 1;
+  string Locality = 2;
+  string PostalCode = 3;
+  string Region = 4;
+  string CountryCode = 5;
+}
+
+message AddressValidationResponseSuccess {
+  string Uuid = 1;
+  repeated string AddressLines = 2;
+  string Region = 3;
+  string Locality = 4;
+  string PostalCode = 5;
+  string CountryCode = 6;
+  map<string, string> Meta = 7;
+}
+
+enum ErrorCode {
+  INVALID_ADDRESS_FORMAT = 0;
+  UNABLE_TO_VALIDATE_ADDRESS = 1;
+}
+
+message AddressValidationResponseFailure {
+  AddressValidationRequest input = 1;
+  ErrorCode error_code = 2;
+}
+
+message AddressValidationResponse {
+  oneof response {
+    AddressValidationResponseSuccess success_response = 1;
+    AddressValidationResponseFailure error_response = 2;
+  }
+}
+
+service Address {
+  rpc Validate(AddressValidationRequest) returns (AddressValidationResponse) {}
+}

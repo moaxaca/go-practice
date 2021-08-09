@@ -1,4 +1,4 @@
-package rest_server
+package rest_test
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io"
-	"io.parcely.address_validation/internal/controllers"
+	"io.parcely.address_validation/api/rest/handlers"
 	"io.parcely.address_validation/test/util"
 	"testing"
 )
@@ -15,9 +15,9 @@ func TestAddressValidation(t *testing.T) {
 	th := util.CreateTestRestHarness()
 	tests := []struct {
 		status  int
-		request controllers.AddressValidationRequest
+		request handlers.AddressValidationRequest
 	}{
-		{status: 200, request: controllers.AddressValidationRequest {AddressLines: []string {"6272 Pacific Coast Hwy"}, Locality: "Long Beach", PostalCode: "90803", Region: "CA"}},
+		{status: 200, request: handlers.AddressValidationRequest{AddressLines: []string {"6272 Pacific Coast Hwy"}, Locality: "Long Beach", PostalCode: "90803", Region: "CA"}},
 		//{status: "404", request: map[string]string {"addressLines": "test", "region": "test"}},
 	}
 

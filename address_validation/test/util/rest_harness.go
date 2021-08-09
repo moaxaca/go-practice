@@ -2,6 +2,7 @@ package util
 
 import (
 	"io"
+	"io.parcely.address_validation/api/rest"
 	"io.parcely.address_validation/internal"
 	"net"
 	"net/http"
@@ -21,7 +22,7 @@ func (th *TestRestHarness) Post(path string, contentType string, body io.Reader)
 
 func CreateTestRestHarness() TestRestHarness {
 	port := "8079"
-	config := internal.RestServerConfiguration{}
+	config := rest.RestServerConfiguration{}
 	config.Name = "test suite"
 	config.Address = ":"+port
 	th := TestRestHarness{}
@@ -36,7 +37,8 @@ func CreateTestRestHarness() TestRestHarness {
 		panic("Unable to close port")
 	}
 	// Start Server
-	srv := internal.CreateRestServer(config)
+	ioc := internal.CreateIoc()
+	srv := rest.CreateRestServer(config, ioc)
 	err := srv.Start()
 	if err != nil {
 		panic("Unable to create test server")

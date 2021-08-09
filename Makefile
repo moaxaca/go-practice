@@ -71,10 +71,14 @@ serve: build
 	make build TARGET=production;
 	docker run -it --env-file .env -p 8080:8080 $(TAG);
 
-# Swagger
-generate_swagger:
-	cd $(APPLICATION) && swagger generate spec -o ./api/rest/swagger.json
+# Proto
+gen_proto:
+	cd $(APPLICATION) && protoc \
+		--go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		api/grpc/proto/*.proto;
 
+# Swagger
 swagger:
 	docker rm $(TAG)-swagger || true;
 	docker buildx build . \

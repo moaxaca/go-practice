@@ -1,0 +1,14 @@
+syntax = "proto3";
+option go_package = "api/grpc/protos";
+
+service Example {
+  rpc Ping(ExampleRequest) returns (ExampleResponse) {}
+}
+
+message ExampleRequest {
+  string message = 1;
+}
+
+message ExampleResponse {
+  string relay = 1;
+}

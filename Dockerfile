@@ -2,6 +2,10 @@
 FROM --platform=${BUILDPLATFORM} golang:1.16 AS base
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
+RUN apt-get update
+RUN apt install -y protobuf-compiler
+RUN go get google.golang.org/protobuf/cmd/protoc-gen-go@v1.25.0 \
+    google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
 
 # Dependencies
 FROM base as dependencies
@@ -22,6 +26,7 @@ RUN go mod vendor
 
 # Build
 FROM code as build
+RUN protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative api/grpc/proto/*.proto
 RUN go build -o /main-go cmd/main.go
 
 # Lint
