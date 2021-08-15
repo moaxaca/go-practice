@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/registry"
 	"io.parcely.address_validation/api/grpc"
@@ -13,7 +14,20 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
 	ioc := internal.CreateIoc()
+
+	tracer := ioc.GetTracer(ctx)
+	err := func(ctx context.Context) error {
+		ctx, span := tracer.Start(ctx, "foo")
+		defer span.End()
+		return nil
+	}(ctx)
+	if err != nil {
+		log.Fatalf("span test: %v", err)
+		return
+	}
+
 	wg := new(sync.WaitGroup)
 	wg.Add(2)
 	go func() {

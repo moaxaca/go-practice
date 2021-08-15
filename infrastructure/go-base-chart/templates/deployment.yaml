@@ -36,6 +36,8 @@ spec:
           env:
             - name: APP_PORT
               value: {{ .Values.imageConfig.containerPort | quote }}
+          envFrom:
+            {{- toYaml .Values.envFrom | nindent 12 }}
           ports:
             - name: http
               containerPort: {{ .Values.imageConfig.containerPort }}

@@ -3,6 +3,8 @@ module io.parcely.address_validation
 go 1.16
 
 require (
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go v0.21.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v0.21.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/asim/go-micro/plugins/server/http/v3 v3.0.0-20210716165540-546225f1d8db
 	github.com/asim/go-micro/v3 v3.5.2-0.20210630062103-c13bb07171bc
@@ -28,7 +30,7 @@ require (
 	go.opentelemetry.io/otel/metric v0.21.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.0.0-RC1
 	go.opentelemetry.io/otel/sdk/metric v0.21.0 // indirect
-	go.opentelemetry.io/otel/trace v1.0.0-RC1 // indirect
+	go.opentelemetry.io/otel/trace v1.0.0-RC1
 	golang.org/x/net v0.0.0-20210716203947-853a461950ff // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/tools v0.1.5 // indirect
