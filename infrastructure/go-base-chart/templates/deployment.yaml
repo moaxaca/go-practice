@@ -34,8 +34,10 @@ spec:
           image: {{ .Values.image }}
           imagePullPolicy: {{ .Values.imageConfig.pullPolicy }}
           env:
-            - name: APP_PORT
+            - name: APP_REST_PORT
               value: {{ .Values.imageConfig.containerPort | quote }}
+            - name: APP_GRPC_PORT
+              value: "3001"
           envFrom:
             {{- toYaml .Values.envFrom | nindent 12 }}
           ports:
