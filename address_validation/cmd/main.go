@@ -19,7 +19,7 @@ func main() {
 
 	tracer := ioc.GetTracer(ctx)
 	err := func(ctx context.Context) error {
-		ctx, span := tracer.Start(ctx, "foo")
+		_, span := tracer.Start(ctx, "foo")
 		defer span.End()
 		return nil
 	}(ctx)

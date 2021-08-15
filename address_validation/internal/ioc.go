@@ -19,7 +19,7 @@ type IocContainer struct {
 
 func (f *IocContainer) GetTracer(ctx context.Context) trace.Tracer {
 	exporterStrategy := os.Getenv("OTEL_EXPORTER")
-	if (exporterStrategy == "gcp") {
+	if exporterStrategy == "gcp" {
 		projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
 		exporter, err := texporter.NewExporter(texporter.WithProjectID(projectID))
 		if err != nil {
@@ -34,9 +34,7 @@ func (f *IocContainer) GetTracer(ctx context.Context) trace.Tracer {
 		}(tp, ctx) // flushes any pending spans
 		otel.SetTracerProvider(tp)
 	} else {
-		traceExporter, err := stdouttrace.New(
-			stdouttrace.WithPrettyPrint(),
-		)
+		traceExporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 		if err != nil {
 			log.Fatalf("texporter.NewExporter: %v", err)
 		}
@@ -44,7 +42,7 @@ func (f *IocContainer) GetTracer(ctx context.Context) trace.Tracer {
 		tp := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(bsp))
 		otel.SetTracerProvider(tp)
 	}
-	return otel.GetTracerProvider().Tracer("test")
+	return otel.GetTracerProvider().Tracer("av")
 }
 
 func CreateIoc() IocContainer {
