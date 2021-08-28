@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
 env:
   baseVersion: 5.x
 jobs:
