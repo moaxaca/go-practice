@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
 env:
   baseVersion: 5.x
 jobs:
@@ -55,11 +56,11 @@ jobs:
           echo "CommitsSinceVersionSourcePadded: ${{ steps.gitversion.outputs.commitsSinceVersionSourcePadded }}"
           echo "UncommittedChanges: ${{ steps.gitversion.outputs.uncommittedChanges }}"
           echo "CommitDate: ${{ steps.gitversion.outputs.commitDate }}"
-  create-release-notes:
-    name: Create Release Notes
-    runs-on: ubuntu-latest
-    needs: calculate-version
-    steps:
-      - run: |
-          # Output variables can also be accessed in steps, using an expression.
-          echo "Creating release notes for ${{ needs.calculate-version.outputs.branchName }} branch."
+      - name: Generate Changelog
+        run: echo "# Good things have arrived" > ${{ github.workspace }}-CHANGELOG.txt
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.gitversion.outputs.semVer }}
