@@ -64,11 +64,11 @@ jobs:
       - run: |
           # Output variables can also be accessed in steps, using an expression.
           echo "Creating release notes for ${{ needs.calculate-version.outputs.branchName }} branch."
-      - uses: gittools/actions/gitreleasemanager/setup@v0.9.2
+      - uses: gittools/actions/gitreleasemanager/setup@v0.9.8
         name: Install GitReleaseManager
         with:
           versionSpec: '0.10.x'
-      - uses: gittools/actions/gitreleasemanager/publish@v0.9.2
+      - uses: gittools/actions/gitreleasemanager/publish@v0.9.8
         name: Publish release with GitReleaseManager
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
